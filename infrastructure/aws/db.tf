@@ -3,7 +3,8 @@ resource "aws_db_instance" "graph-indexer-postgres" {
   engine                 = "postgres"
   engine_version         = var.postgresql_version
   instance_class         = var.postgresql_sku_name
-  name                   = var.postgresql_dbname_indexer
+  identifier             = var.postgresql_dbname_indexer
+  db_name                = var.postgresql_dbname_indexer
   username               = var.postgresql_admin_user
   password               = var.postgresql_admin_password
   skip_final_snapshot    = true

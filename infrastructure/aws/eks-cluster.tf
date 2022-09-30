@@ -9,8 +9,8 @@ resource "aws_eks_cluster" "graph-indexer" {
   }
 
   depends_on = [
-    aws_iam_role_policy_attachment.graph-indexer-ingress-management-https,
-    aws_iam_role_policy_attachment.graph-indexer-ingress-managementIPs-https,
+    aws_iam_role_policy_attachment.graph-indexer-AmazonEKSClusterPolicy,
+    aws_iam_role_policy_attachment.graph-indexer-AmazonEKSVPCResourceController,
   ]
 }
 

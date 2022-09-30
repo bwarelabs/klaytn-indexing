@@ -53,7 +53,7 @@ resource "aws_subnet" "graph-indexer-rds-subnets" {
 
 resource "aws_db_subnet_group" "graph-indexer-rds-subnet-group" {
   name       = "graph-indexer-rds-subnet-group"
-  subnet_ids = aws_subnet.thegraph_db_subnets[*].id
+  subnet_ids = aws_subnet.graph-indexer-rds-subnets[*].id
 }
 
 # IGW for the VPC
