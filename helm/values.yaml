@@ -1,0 +1,72 @@
+replicaCount: 1
+imagePullPolicy: Always
+
+image:
+    name: graphprotocol/graph-node
+    tag: v0.27.0
+
+labels:
+  project: graph-indexer
+
+#TODO Update these
+ingress:
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/whitelist-source-range: "0.0.0.0/0"
+  # hosts:
+  #   - host: "*"
+  #     paths:
+  #       - path: /
+  #         serviceName: indexer-agent
+  #         servicePort: 80
+  labels: []
+
+
+persistence:
+  ## If true, use a Persistent Volume Claim, If false, use emptyDir
+  enabled: true
+  storageClass: "-"
+  accessModes: ReadWriteOnce
+  storage: 30Gi
+
+nodeSelector: {}
+
+tolerations: 
+  - key: component
+    value: graph-indexer	
+    operator: Equal
+    effect: NoSchedule
+
+affinity: {}
+
+chain: graph-indexer
+environment: prod
+network: mainnet
+
+node:
+  name: klaytn
+
+# TODO UPDATE THE HOST BELOW
+CustomValues:
+  chain_name: "klaytn"
+  endpoint: "https://klaytn-mainnet.eu-central-1.bwarelabs.app/"
+  postgress:
+    external: true
+    query:
+      host: "graph.cnznlqeisuwl.us-west-2.rds.amazonaws.com"
+      username: "postgres" 
+      password: "postgres"
+      database: "graph"
+      port: 5432
+    indexer:
+      host: "graph.cnznlqeisuwl.us-west-2.rds.amazonaws.com"
+      username: "postgres" 
+      password: "postgres"
+      database: "graph"
+      port: 5432
+
+
+
+
+
+    

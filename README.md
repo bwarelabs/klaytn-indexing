@@ -19,7 +19,9 @@ in the future.
 * Terraform: https://learn.hashicorp.com/tutorials/terraform/install-cli?in=terraform/aws-get-started
 * AWS CLI: https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html
 * Kubectl: https://kubernetes.io/docs/tasks/tools/
+* Helm: https://helm.sh/docs/intro/install/
 * An AWS account: https://aws.amazon.com/account/sign-up
+* A Klaytn API Endpoint
 
 ### Create the infrastructure
 
@@ -44,7 +46,7 @@ We will use terraform to create the infrastructure in AWS:
   * From CLI:
   ```
   $ aws eks list-clusters
-  $ aws rds describe-db-instances --region=us-west-2
+  $ aws rds describe-db-instances
   ```
   * From UI: 
     * EKS Cluster: https://us-west-2.console.aws.amazon.com/eks/home?region=us-west-2#/clusters
@@ -57,6 +59,21 @@ aws eks update-kubeconfig --name graph-indexer
 ```
 kubectl get pods --all-namespaces
 ```
+* Navigate to the `helm` directory and update the missing values in `values.yaml`
+  * The database hostname was printed by the `terraform apply` command and by the `aws rds describe-db-instances` command (the `Address` field)
+  * The Klaytn network API endpoint should be something you have.
+* Navigate to the `helm` directory and run these commands:
+```
+helm install graph-indexer . --create-namespace --namespace=graph-indexer
+helm list
+kubectl get pods --all-namespaces
+```
+* Get the external IP of the Ingress controller:
+```
+kubectl get all -n ingress-controller
+```
+
+* Copy/paste the external IP in a browser. You should see the Graph UI
 
 ## Subgraphs
 

@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ethereum-networks-{{ .Values.node.name }}
+data:
+  networks: >-
+    {{ .Values.CustomValues.chain_name }}:{{ .Values.CustomValues.endpoint }}

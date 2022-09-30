@@ -1,0 +1,13 @@
+{{- if .Values.persistence.enabled -}}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: ifps-{{ .Values.node.name }}-pvc
+spec:
+  accessModes:
+    - {{ default .Values.persistence.accessModes "ReadWriteOnce" }}
+  resources:
+    requests:
+      storage: 100Gi
+{{- end -}}

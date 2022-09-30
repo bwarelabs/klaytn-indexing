@@ -1,0 +1,108 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: query-node-{{ .Values.node.name }}
+  labels:
+    app.kubernetes.io/instance: query-node-{{ .Values.node.name }}
+    app.kubernetes.io/name: query-node-{{ .Values.node.name }}
+    app.kubernetes.io/part-of: graph-indexer
+    app.kubernetes.io/version: {{ .Values.image.tag }}
+    {{- if .Values.labels }}
+{{ toYaml .Values.labels | indent 4 }}
+    {{- end }}
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: query-node-{{ .Values.node.name }}
+      app.kubernetes.io/name: query-node-{{ .Values.node.name }}
+      app.kubernetes.io/part-of: graph-indexer
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/instance: query-node-{{ .Values.node.name }}
+        app.kubernetes.io/name: query-node-{{ .Values.node.name }}
+        app.kubernetes.io/part-of: graph-indexer
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/path: "/metrics"
+        prometheus.io/port: "8040"
+    spec:  
+      containers:
+        # Proxy that forwards HTTP requests to port 8000 and
+        # WebSocket requests to port 8001
+        - name: nginx
+          image: nginx
+          imagePullPolicy: {{ .Values.imagePullPolicy }}
+          ports:
+            - containerPort: 80
+          volumeMounts:
+            - name: query-node-proxy-config
+              mountPath: /etc/nginx/nginx.conf
+              subPath: nginx.conf
+        # The query node itself
+        - name: graph-node
+          image: {{ .Values.image.name }}:{{ .Values.image.tag }}
+          imagePullPolicy: {{ .Values.imagePullPolicy }}
+          ports:
+            - name: http
+              containerPort: 8000
+            - name: ws
+              containerPort: 8001
+            - name: admin
+              containerPort: 8020
+            - name: index-node
+              containerPort: 8030
+          env:
+            - name: EXPERIMENTAL_SUBGRAPH_VERSION_SWITCHING_MODE
+              value: synced
+            - name: GRAPH_KILL_IF_UNRESPONSIVE
+              value: "true"
+            {{- if .Values.CustomValues.postgress.external }}
+            - name: postgres_host
+              value: {{ index  .Values.CustomValues "postgress" "query" "host" }}
+            - name: postgres_user
+              value: {{ index  .Values.CustomValues "postgress" "query" "username" }}
+            - name: postgres_pass
+              value: {{ index  .Values.CustomValues "postgress" "query" "password" }}
+            - name: postgres_db
+              value: {{ index  .Values.CustomValues "postgress" "query" "database" }}
+           {{ else }}
+            - name: postgres_host
+              value: "postgres.{{ .Release.Namespace }}.svc.cluster.local"
+            - name: postgres_user
+              value: "postgresadmin"
+            - name: postgres_pass
+              value: "admin123"
+            - name: postgres_db
+              value: "graph"
+            {{ end }}
+            - name: node_role
+              value: query-node
+            - name: node_id
+              value: index-1
+            - name: GRAPH_LOG
+              value: trace
+            - name: RUST_BACKTRACE
+              value: "full"
+            - name: ipfs
+              value: "ipfs-{{ .Values.node.name }}-service.{{ .Release.Namespace }}.svc.cluster.local:5001"
+            - name: ethereum
+              valueFrom:
+                configMapKeyRef:
+                  name: ethereum-networks-{{ .Values.node.name }}
+                  key: networks
+      volumes:
+        - name: query-node-proxy-config
+          configMap:
+            name: query-node-proxy-config-{{ .Values.node.name }}
+      hostNetwork: false
+      dnsPolicy: "ClusterFirst"
+      {{- if .Values.tolerations }}
+      tolerations:
+{{ toYaml .Values.tolerations | indent 8 }}
+      {{- end }}
+
+
+
+    

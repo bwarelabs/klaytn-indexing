@@ -1,0 +1,21 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: index-node-{{ .Values.node.name }}-service
+  labels:
+    app.kubernetes.io/component: index-node-{{ .Values.node.name }}-service
+    app.kubernetes.io/name: index-node-{{ .Values.node.name }}
+    app.kubernetes.io/part-of: graph-indexer
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: index-node-{{ .Values.node.name }}
+  ports:
+  - name: json-rpc
+    protocol: TCP
+    port: 80
+    targetPort: 8020
+  - name: metrics
+    protocol: TCP
+    port: 8040
+    targetPort: 8040

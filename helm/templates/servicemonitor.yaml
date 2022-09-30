@@ -1,0 +1,16 @@
+# TODO Fix it
+# kind: ServiceMonitor
+# apiVersion: monitoring.coreos.com/v1
+# metadata:
+#   name: index-node-{{ .Values.node.name }}-service-monitor
+#   labels:
+#     app.kubernetes.io/component: index-node-monitor
+#     app.kubernetes.io/name:  index-node-{{ .Values.node.name }}-service-monitor
+#     app.kubernetes.io/part-of: graph-indexer
+# spec:
+#   endpoints:
+#     - interval: 30s
+#       port: metrics
+#   selector:
+#     matchLabels:
+#        app.kubernetes.io/name: index-node-{{ .Values.node.name }}
