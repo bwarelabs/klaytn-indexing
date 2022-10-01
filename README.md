@@ -77,7 +77,7 @@ kubectl get pods --all-namespaces
 ```
 kubectl get all -n ingress-controller
 ```
-* Navigate to the `http://<EXTERNAL_IP>/subgraphs/graphql` url in a browser to
+* Navigate to the `http://<EXTERNAL_IP>/query/subgraphs/graphql` url in a browser to
 confirm it is working correctly
 
 > **_NOTE:_** : To destroy everything, simply run `terraform destroy --auto-approve`
@@ -119,5 +119,35 @@ nginx-ingress
 ### Prerequisites
 
 * The Graph CLI: https://thegraph.com/docs/en/cookbook/quick-start/#1-install-the-graph-cli 
+
+### Deploying
+
+* Run these commands from your repository:
+```
+graph create example --node http://<EXTERNAL_IP>/index
+graph deploy example --ipfs http://<EXTERNAL_IP>/ipfs --node http://<EXTERNAL_IP>/index
+```
+> **_NOTE:_** : If you do not have a subgraph, you can use this example one:
+https://github.com/graphprotocol/example-subgraph. Don't forget to change the
+network in `subgraph.yaml` to `klaytn`.
+
+* To check that indexing has started run the following command:
+```
+kubectl logs service/index-node-klaytn-service -n graph-indexer | tail -n 100
+```
+> **_NOTE:_** : You will have to wait for a few minutes for blocks to be 
+ingested before running queries.
+* Navigate to `http://<EXTERNAL_IP>/query/subgraphs/name/<SUBGRAPH_NAME>/graphql`
+and run queries. Here's an example:
+```
+query MyQuery {
+  _meta {
+    block {
+      number
+    }
+  }
+}
+```
+> **_NOTE:_** : For the example, `SUBGRAPH_NAME` is `example`
 
 ## Queries

@@ -10,10 +10,24 @@ spec:
   rules:
   - http:
       paths:
-      - path: /
+      - path: /query(/|$)(.*)
         pathType: Prefix
         backend:
           service:
             name: query-node-{{ .Values.node.name }}-service
             port:
               number: 80
+      - path: /ipfs(/|$)(.*)
+        pathType: Prefix
+        backend:
+          service:
+            name: ipfs-{{ .Values.node.name }}-service
+            port:
+              number: 5001
+      - path: /index(/|$)(.*)
+        pathType: Prefix
+        backend:
+          service:
+            name: index-node-{{ .Values.node.name }}-service
+            port:
+              number: 8020

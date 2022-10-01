@@ -11,6 +11,7 @@ labels:
 ingress:
   annotations:
     kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
     nginx.ingress.kubernetes.io/whitelist-source-range: "0.0.0.0/0"
 
 persistence:
@@ -39,17 +40,17 @@ node:
 
 CustomValues:
   chain_name: "klaytn"
-  endpoint: "<HOST_URL>" # UPDATE THE VALUE
+  endpoint: "https://klaytn-mainnet.eu-central-1.bwarelabs.app/"
   postgress:
     external: true
     query:
-      host: "<DB_URL>" # UPDATE THE VALUE
+      host: "graph.cnznlqeisuwl.us-west-2.rds.amazonaws.com"
       username: "postgres" 
       password: "postgres"
       database: "graph"
       port: 5432
     indexer:
-      host: "<DB_URL>" # UPDATE THE VALUE
+      host: "graph.cnznlqeisuwl.us-west-2.rds.amazonaws.com"
       username: "postgres" 
       password: "postgres"
       database: "graph"
