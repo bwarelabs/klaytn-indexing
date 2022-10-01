@@ -46,20 +46,19 @@ network: mainnet
 node:
   name: klaytn
 
-# TODO UPDATE THE HOST BELOW
 CustomValues:
   chain_name: "klaytn"
-  endpoint: "https://klaytn-mainnet.eu-central-1.bwarelabs.app/"
+  endpoint: "<HOST_URL>" # UPDATE THE VALUE
   postgress:
     external: true
     query:
-      host: "graph.cnznlqeisuwl.us-west-2.rds.amazonaws.com"
+      host: "<DB_URL>" # UPDATE THE VALUE
       username: "postgres" 
       password: "postgres"
       database: "graph"
       port: 5432
     indexer:
-      host: "graph.cnznlqeisuwl.us-west-2.rds.amazonaws.com"
+      host: "<DB_URL>" # UPDATE THE VALUE
       username: "postgres" 
       password: "postgres"
       database: "graph"

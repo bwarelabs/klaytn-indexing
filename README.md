@@ -59,21 +59,20 @@ aws eks update-kubeconfig --name graph-indexer
 ```
 kubectl get pods --all-namespaces
 ```
-* Navigate to the `helm` directory and update the missing values in `values.yaml`
+* Update the missing values in `helm/values.yaml` (search for `# UPDATE THE VALUE` comments)
   * The database hostname was printed by the `terraform apply` command and by the `aws rds describe-db-instances` command (the `Address` field)
   * The Klaytn network API endpoint should be something you have.
 * Navigate to the `helm` directory and run these commands:
 ```
 helm install graph-indexer . --create-namespace --namespace=graph-indexer
-helm list
+helm list --all-namespaces
 kubectl get pods --all-namespaces
 ```
 * Get the external IP of the Ingress controller:
 ```
 kubectl get all -n ingress-controller
 ```
-
-* Copy/paste the external IP in a browser. You should see the Graph UI
+* Navigate to the `http://<EXTERNAL_IP>/subgraphs/graphql` url in a browser to confirm it is working correctly
 
 ## Subgraphs
 
