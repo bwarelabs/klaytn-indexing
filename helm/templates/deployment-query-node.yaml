@@ -29,18 +29,6 @@ spec:
         prometheus.io/port: "8040"
     spec:  
       containers:
-        # Proxy that forwards HTTP requests to port 8000 and
-        # WebSocket requests to port 8001
-        - name: nginx
-          image: nginx
-          imagePullPolicy: {{ .Values.imagePullPolicy }}
-          ports:
-            - containerPort: 80
-          volumeMounts:
-            - name: query-node-proxy-config
-              mountPath: /etc/nginx/nginx.conf
-              subPath: nginx.conf
-        # The query node itself
         - name: graph-node
           image: {{ .Values.image.name }}:{{ .Values.image.tag }}
           imagePullPolicy: {{ .Values.imagePullPolicy }}

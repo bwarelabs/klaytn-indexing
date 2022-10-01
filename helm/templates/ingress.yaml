@@ -16,7 +16,14 @@ spec:
           service:
             name: query-node-{{ .Values.node.name }}-service
             port:
-              number: 80
+              number: 8000
+      - path: /query-ws(/|$)(.*)
+        pathType: Prefix
+        backend:
+          service:
+            name: query-node-{{ .Values.node.name }}-service
+            port:
+              number: 8001
       - path: /ipfs(/|$)(.*)
         pathType: Prefix
         backend:
