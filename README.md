@@ -96,7 +96,7 @@ this page: https://www.terraform.io/language/settings/backends/s3
   in the `helm/values.yaml` file to only allow access from your network.
 > **_NOTE:_** : After updating the configs you would have to run both
 `terraform apply` and `helm upgrade graph-indexer . --namespace=graph-indexer`
-*  The database credentials are currently stored in plain text.
+* The database credentials are currently stored in plain text.
   * Remove the default values of `postgresql_admin_user` and
   `postgresql_admin_password` from `infrastructure/aws/variables.tf`.
   * Define the new values in a `.tfvars` file in the same folder like this:
