@@ -10,14 +10,14 @@ spec:
   rules:
   - http:
       paths:
-      - path: /query(/|$)(.*)
+      - path: /*(/|$)(subgraphs.*)
         pathType: Prefix
         backend:
           service:
             name: query-node-{{ .Values.node.name }}-service
             port:
               number: 8000
-      - path: /query-ws(/|$)(.*)
+      - path: /ws(/|$)(.*)
         pathType: Prefix
         backend:
           service:

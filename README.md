@@ -77,7 +77,7 @@ kubectl get pods --all-namespaces
 ```
 kubectl get all -n ingress-controller
 ```
-* Navigate to the `http://<EXTERNAL_IP>/query/subgraphs/graphql` url in a browser to
+* Navigate to the `http://<EXTERNAL_IP>/subgraphs/graphql` url in a browser to
 confirm it is working correctly
 
 > **_NOTE:_** : To destroy everything, simply run `terraform destroy --auto-approve`
@@ -137,7 +137,7 @@ kubectl logs service/index-node-klaytn-service -n graph-indexer | tail -n 100
 ```
 > **_NOTE:_** : You will have to wait for a few minutes for blocks to be 
 ingested before running queries.
-* Navigate to `http://<EXTERNAL_IP>/query/subgraphs/name/<SUBGRAPH_NAME>/graphql`
+* Navigate to `http://<EXTERNAL_IP>/subgraphs/name/<SUBGRAPH_NAME>/graphql`
 and run queries. Here's an example:
 ```
 query MyQuery {
