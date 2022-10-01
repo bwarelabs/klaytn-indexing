@@ -8,19 +8,10 @@ image:
 labels:
   project: graph-indexer
 
-#TODO Update these
 ingress:
   annotations:
     kubernetes.io/ingress.class: nginx
     nginx.ingress.kubernetes.io/whitelist-source-range: "0.0.0.0/0"
-  # hosts:
-  #   - host: "*"
-  #     paths:
-  #       - path: /
-  #         serviceName: indexer-agent
-  #         servicePort: 80
-  labels: []
-
 
 persistence:
   ## If true, use a Persistent Volume Claim, If false, use emptyDir

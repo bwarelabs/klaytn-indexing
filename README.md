@@ -26,7 +26,8 @@ in the future.
 ### Create the infrastructure
 
 We will use terraform to create the infrastructure in AWS:
-* Configure your AWS CLI (and implicitly terraform): https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-quickstart.html#cli-configure-quickstart-config
+* Configure your AWS CLI (and implicitly terraform): 
+https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-quickstart.html#cli-configure-quickstart-config
   ```
   $ aws configure
   AWS Access Key ID [None]: <Your-Key-ID>
@@ -34,9 +35,11 @@ We will use terraform to create the infrastructure in AWS:
   Default region name [None]: us-west-2
   Default output format [None]: json
   ```
-  > **_NOTE:_** : Instructions for getting the credentials are in the same userguide. 
+  > **_NOTE:_** : Instructions for getting the credentials are in the same 
+  user guide. 
 
-  > **_NOTE:_** : At the end of this step you should have credentials configured in your `$HOME/.aws/credentials`
+  > **_NOTE:_** : At the end of this step you should have credentials 
+  configured in your `$HOME/.aws/credentials`
 * Navigate to the `infrastructure/aws` directory and run these commands:
   ```
   $ terraform init
@@ -59,8 +62,10 @@ aws eks update-kubeconfig --name graph-indexer
 ```
 kubectl get pods --all-namespaces
 ```
-* Update the missing values in `helm/values.yaml` (search for `# UPDATE THE VALUE` comments)
-  * The database hostname was printed by the `terraform apply` command and by the `aws rds describe-db-instances` command (the `Address` field)
+* Update the missing values in `helm/values.yaml` (search for 
+`# UPDATE THE VALUE` comments)
+  * The database hostname was printed by the `terraform apply` command and by
+  the `aws rds describe-db-instances` command (the `Address` field)
   * The Klaytn network API endpoint should be something you have.
 * Navigate to the `helm` directory and run these commands:
 ```
@@ -72,8 +77,47 @@ kubectl get pods --all-namespaces
 ```
 kubectl get all -n ingress-controller
 ```
-* Navigate to the `http://<EXTERNAL_IP>/subgraphs/graphql` url in a browser to confirm it is working correctly
+* Navigate to the `http://<EXTERNAL_IP>/subgraphs/graphql` url in a browser to
+confirm it is working correctly
+
+> **_NOTE:_** : To destroy everything, simply run `terraform destroy --auto-approve`
+
+### (OPTIONAL) Making the setup production-ready
+
+* Terraform uses a local statefile. To make it persistent, you would have to
+create an S3 Bucket and a DynamoDB table manually following the instructions on
+this page: https://www.terraform.io/language/settings/backends/s3
+> **_NOTE:_** : After updating the terraform configs, you would have to run
+`terraform init` again.
+* Restrict network access
+  * Modify the `eks_management_ips` variable in the
+  `infrastructure/aws/variables.tf` file to only allow access from your network.
+  * Modify the `nginx.ingress.kubernetes.io/whitelist-source-range` variable
+  in the `helm/values.yaml` file to only allow access from your network.
+> **_NOTE:_** : After updating the configs you would have to run both
+`terraform apply` and `helm upgrade graph-indexer . --namespace=graph-indexer`
+*  The database credentials are currently stored in plain text.
+  * Remove the default values of `postgresql_admin_user` and
+  `postgresql_admin_password` from `infrastructure/aws/variables.tf`.
+  * Define the new values in a `.tfvars` file in the same folder like this:
+  ```
+  postgresql_admin_user = "<your-desired-username>"
+  postgresql_admin_password = "<your-desired-password>"
+  ```
+  > **_NOTE:_** : Do NOT commit `.tfvars` to source control.
+
+  > **_NOTE:_** : You would have to `terraform apply` the changes.
+  * Define a new 
+  [kubernetes secret terraform resource](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/secret)
+  which references the 2 variables and then update the helm charts to reference
+  the secret. 
+* Configure a DNS entry and set up certificates for the kubernetes 
+nginx-ingress
 
 ## Subgraphs
+
+### Prerequisites
+
+* The Graph CLI: https://thegraph.com/docs/en/cookbook/quick-start/#1-install-the-graph-cli 
 
 ## Queries
