@@ -99,7 +99,7 @@ this page: https://www.terraform.io/language/settings/backends/s3
 * The database credentials are currently stored in plain text.
   * Remove the default values of `postgresql_admin_user` and
   `postgresql_admin_password` from `infrastructure/aws/variables.tf`.
-  * Define the new values in a `.tfvars` file in the same folder like this:
+  * Define the new values in a `.tfvars` file in the same directory like this:
   ```
   postgresql_admin_user = "<your-desired-username>"
   postgresql_admin_password = "<your-desired-password>"
@@ -129,7 +129,7 @@ graph deploy example --ipfs http://<EXTERNAL_IP>/ipfs --node http://<EXTERNAL_IP
 ```
 > **_NOTE:_** : If you do not have a subgraph, you can use this example one:
 https://github.com/graphprotocol/example-subgraph. Don't forget to change the
-network in `subgraph.yaml` to `klaytn`.
+network to `klaytn` in `subgraph.yaml`.
 
 * To check that indexing has started run the following command:
 ```
@@ -137,8 +137,16 @@ kubectl logs service/index-node-klaytn-service -n graph-indexer | tail -n 100
 ```
 > **_NOTE:_** : You will have to wait for a few minutes for blocks to be 
 ingested before running queries.
+
+### Creating
+
+To learn more about creating custom subgraphs take a look at 
+https://thegraph.com/docs/en/developing/creating-a-subgraph/
+
+## Queries
+
 * Navigate to `http://<EXTERNAL_IP>/subgraphs/name/<SUBGRAPH_NAME>/graphql`
-and run queries. Here's an example:
+to run queries. Here's an example:
 ```
 query MyQuery {
   _meta {
@@ -148,6 +156,4 @@ query MyQuery {
   }
 }
 ```
-> **_NOTE:_** : For the example, `SUBGRAPH_NAME` is `example`
-
-## Queries
+> **_NOTE:_** : For the example subgraph, `SUBGRAPH_NAME` is `example`
