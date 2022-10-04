@@ -38,3 +38,10 @@ spec:
             name: index-node-{{ .Values.node.name }}-service
             port:
               number: 8020
+      - path: /prometheus(/|$)(.*)
+        pathType: Prefix
+        backend:
+          service:
+            name: prometheus-{{ .Values.node.name }}-service
+            port:
+              number: 9090

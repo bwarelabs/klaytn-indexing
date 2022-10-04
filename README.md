@@ -69,6 +69,7 @@ kubectl get pods --all-namespaces
   * The Klaytn network API endpoint should be something you have.
 * Navigate to the `helm` directory and run these commands:
 ```
+kubectl create -f https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/master/bundle.yaml
 helm install graph-indexer . --create-namespace --namespace=graph-indexer
 helm list --all-namespaces
 kubectl get pods --all-namespaces
@@ -113,6 +114,10 @@ this page: https://www.terraform.io/language/settings/backends/s3
   the secret. 
 * Configure a DNS entry and set up certificates for the kubernetes 
 nginx-ingress
+* For monitoring, a prometheus node which scrapes metrics from indexer nodes 
+is available  at `http://<EXTERNAL_IP>/prometheus/graph`. You could configure it
+as a data source in Grafana Cloud. 
+
 
 ## Subgraphs
 

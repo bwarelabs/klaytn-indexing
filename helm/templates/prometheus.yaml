@@ -1,0 +1,56 @@
+kind: ServiceAccount
+apiVersion: v1
+metadata:
+  name: prometheus
+---
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: prometheus
+rules:
+- apiGroups: [""]
+  resources:
+  - nodes
+  - nodes/metrics
+  - services
+  - endpoints
+  - pods
+  verbs: ["get", "list", "watch"]
+- apiGroups: [""]
+  resources:
+  - configmaps
+  verbs: ["get"]
+- apiGroups:
+  - networking.k8s.io
+  resources:
+  - ingresses
+  verbs: ["get", "list", "watch"]
+- nonResourceURLs: ["/metrics"]
+  verbs: ["get"]
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: prometheus
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: prometheus
+subjects:
+- kind: ServiceAccount
+  name: prometheus
+  namespace: graph-indexer
+---
+kind: Prometheus
+apiVersion: monitoring.coreos.com/v1
+metadata:
+  name: monitoring-{{ .Values.node.name }}
+spec:
+  serviceAccountName: prometheus
+  serviceMonitorSelector:
+    matchLabels:
+       app.kubernetes.io/name: index-node-{{ .Values.node.name }}-service-monitor
+  resources:
+    requests:
+      memory: 400Mi
+  enableAdminAPI: true
