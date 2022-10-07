@@ -56,7 +56,7 @@ https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-quickstart.html#c
     * RDS Database: https://us-west-2.console.aws.amazon.com/rds/home?region=us-west-2#databases: 
 * Configure kubectl:
 ```
-aws eks update-kubeconfig --name graph-indexer
+aws eks update-kubeconfig --name graph-indexer --region=us-west-2
 ```
 * Confirm kubectl is configured:
 ```
@@ -114,10 +114,19 @@ this page: https://www.terraform.io/language/settings/backends/s3
   the secret. 
 * Configure a DNS entry and set up certificates for the kubernetes 
 nginx-ingress
-* For monitoring, a prometheus node which scrapes metrics from indexer nodes 
-is available  at `http://<EXTERNAL_IP>/prometheus/graph`. You could configure it
-as a data source in Grafana Cloud. 
-
+* For monitoring:
+  * A prometheus node which scrapes metrics from indexer nodes is available
+  at `http://<EXTERNAL_IP>/prometheus/graph`. You could configure it as a 
+  data source in Grafana Cloud. Follow the instructions in 
+  [this guide](https://grafana.com/docs/grafana-cloud/kubernetes-monitoring/prometheus/prometheus_operator/#step-6--create-a-kubernetes-secret-to-store-grafana-cloud-credentials)
+  * An alertmanager node is available at `http://<EXTERNAL_IP>/alertmanager`. 
+  You could configure it to send Prometheus alerts to Pagerduty. Take a look at
+  the `alertmanager.yaml` file. For writing alerts, use the `prometheusRules/yaml`
+  file
+  > **_NOTE:_** : Consider storing the Pagerduty API key in a Kubernetes secret
+  managed by Terraform. 
+> **_NOTE:_** : You have to run `helm upgrade graph-indexer . --namespace=graph-indexer`
+to apply the changes. 
 
 ## Subgraphs
 

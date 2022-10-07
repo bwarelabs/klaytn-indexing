@@ -45,3 +45,10 @@ spec:
             name: prometheus-{{ .Values.node.name }}-service
             port:
               number: 9090
+      - path: /alertmanager(/|$)(.*)
+        pathType: Prefix
+        backend:
+          service:
+            name: alertmanager-{{ .Values.node.name }}-service
+            port:
+              number: 9093

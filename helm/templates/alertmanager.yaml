@@ -1,0 +1,27 @@
+kind: Alertmanager
+apiVersion: monitoring.coreos.com/v1
+metadata:
+  name: monitoring-{{ .Values.node.name }}
+spec:
+  alertmanagerConfigSelector:
+    matchLabels:
+      alertmanagerConfig: config-monitoring-{{ .Values.node.name }}
+---
+kind: AlertmanagerConfig
+apiVersion: monitoring.coreos.com/v1alpha1
+metadata:
+  name: config-monitoring-{{ .Values.node.name }}
+  labels:
+    alertmanagerConfig: monitoring-{{ .Values.node.name }}
+spec:
+  route:
+    routes:
+      - match:
+          severity: 'page'
+          receiver: 'pagerduty'
+  receivers:
+  - name: 'pagerduty'
+    pagerdutyConfigs:
+      - serviceKey: 
+          name: pagerduty-{{ .Values.node.name }}
+          key: "<YOUR_PAGERDUTY_KEY>"

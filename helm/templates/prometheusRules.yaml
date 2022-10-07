@@ -1,0 +1,18 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  creationTimestamp: null
+  labels:
+    prometheus: monitoring-{{ .Values.node.name }}
+    role: alert-rules
+  name: rules-{{ .Values.node.name }}
+spec:
+  groups:
+  - name: alerts-{{ .Values.node.name }}
+    rules:
+    # This will always trigger
+    - alert: ExampleAlert
+      expr: vector(1)
+      labels:
+        severity: page
+        receiver: 'pagerduty'

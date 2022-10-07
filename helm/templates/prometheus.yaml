@@ -54,3 +54,12 @@ spec:
     requests:
       memory: 400Mi
   enableAdminAPI: true
+  alerting:
+    alertmanagers:
+    - namespace: graph-indexer
+      name: alertmanager-{{ .Values.node.name }}-service
+      port: web
+  ruleSelector:
+    matchLabels:
+      role: alert-rules
+      prometheus: monitoring-{{ .Values.node.name }}
