@@ -105,7 +105,7 @@ to apply them.
   * Terraform apply the changes: `terraform apply --auto-approve`
   * Create a Kubernetes secret:
   ```
-    kubectl create secret generic postgresql_credentials \
+    kubectl create secret generic postgresql.credentials \
     --namespace=graph-indexer \
     --from-literal=username="<your-desired-username>" \
     --from-literal=password="<your-desired-password>"
@@ -125,12 +125,12 @@ to apply them.
         - name: postgres_user
           valueFrom:
             secretKeyRef:
-                name: postgresql_credentials
+                name: postgresql.credentials
                 key: username
         - name: postgres_pass
           valueFrom:
             secretKeyRef:
-                name: postgresql_credentials
+                name: postgresql.credentials
                 key: password
     ```
   * Apply the changes: `helm upgrade graph-indexer . --namespace=graph-indexer`
@@ -152,6 +152,6 @@ and Helm configurations for the external-dns pod.
     More information at: https://www.pagerduty.com/docs/guides/prometheus-integration-guide/
     * For creating alerts, use the `prometheusRules.yaml` snippetfile.
   > **_NOTE:_** : Consider storing the Pagerduty API key in a Kubernetes secret. 
-  
+
 > **_NOTE:_** : You have to run `helm upgrade graph-indexer . --namespace=graph-indexer`
 to apply the changes. 
