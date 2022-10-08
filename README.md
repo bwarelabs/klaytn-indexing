@@ -1,7 +1,7 @@
 # Indexing the Klaytn network
 
-Set up a Kubernetes cluster of 
-[Graph nodes](https://github.com/graphprotocol/graph-node) that index the 
+Set up a [Graph node](https://github.com/graphprotocol/graph-node)
+that indexes the 
 [Klaytn network](https://klaytn.foundation/) according to the input 
 [subgraphs](https://thegraph.com/docs/en/developing/creating-a-subgraph/)
 which you can use to execute
@@ -9,124 +9,11 @@ which you can use to execute
 
 ## Infrastructure
 
-For setting up the infrastructure, we will use Terraform and AWS. 
+There are multiple options for setting up the infrastructure. Navigate
+to the `infrastructure/<option>` folder and follow the instructions from
+there. 
 
-> **_NOTE:_** : Instructions for other Cloud platforms will be coming
-in the future. 
-
-### Prerequisites
-
-* Terraform: https://learn.hashicorp.com/tutorials/terraform/install-cli?in=terraform/aws-get-started
-* AWS CLI: https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html
-* Kubectl: https://kubernetes.io/docs/tasks/tools/
-* Helm: https://helm.sh/docs/intro/install/
-* An AWS account: https://aws.amazon.com/account/sign-up
-* A Klaytn API Endpoint
-
-### Create the infrastructure
-
-We will use terraform to create the infrastructure in AWS:
-* Configure your AWS CLI (and implicitly terraform): 
-https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-quickstart.html#cli-configure-quickstart-config
-  ```
-  $ aws configure
-  AWS Access Key ID [None]: <Your-Key-ID>
-  AWS Secret Access Key [None]: <Your-Secret-Access-Key>
-  Default region name [None]: us-west-2
-  Default output format [None]: json
-  ```
-  > **_NOTE:_** : Instructions for getting the credentials are in the same 
-  user guide. 
-
-  > **_NOTE:_** : At the end of this step you should have credentials 
-  configured in your `$HOME/.aws/credentials`
-* Navigate to the `infrastructure/aws` directory and run these commands:
-  ```
-  $ terraform init
-  $ terraform apply --auto-approve
-  ```
-* Verify that the new resources have been created:
-  * From CLI:
-  ```
-  $ aws eks list-clusters
-  $ aws rds describe-db-instances
-  ```
-  * From UI: 
-    * EKS Cluster: https://us-west-2.console.aws.amazon.com/eks/home?region=us-west-2#/clusters
-    * RDS Database: https://us-west-2.console.aws.amazon.com/rds/home?region=us-west-2#databases: 
-* Configure kubectl:
-```
-aws eks update-kubeconfig --name graph-indexer --region=us-west-2
-```
-* Confirm kubectl is configured:
-```
-kubectl get pods --all-namespaces
-```
-* Update the missing values in `helm/values.yaml` (search for 
-`# UPDATE THE VALUE` comments)
-  * The database hostname was printed by the `terraform apply` command and by
-  the `aws rds describe-db-instances` command (the `Address` field)
-  * The Klaytn network API endpoint should be something you have.
-* Navigate to the `helm` directory and run these commands:
-```
-kubectl create -f https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/master/bundle.yaml
-helm install graph-indexer . --create-namespace --namespace=graph-indexer
-helm list --all-namespaces
-kubectl get pods --all-namespaces
-```
-* Get the external IP of the Ingress controller:
-```
-kubectl get all -n ingress-controller
-```
-* Navigate to the `http://<EXTERNAL_IP>/subgraphs/graphql` url in a browser to
-confirm it is working correctly
-
-> **_NOTE:_** : To destroy everything, simply run `terraform destroy --auto-approve`
-
-### (OPTIONAL) Making the setup production-ready
-
-* Terraform uses a local statefile. To make it persistent, you would have to
-create an S3 Bucket and a DynamoDB table manually following the instructions on
-this page: https://www.terraform.io/language/settings/backends/s3
-> **_NOTE:_** : After updating the terraform configs, you would have to run
-`terraform init` again.
-* Restrict network access
-  * Modify the `eks_management_ips` variable in the
-  `infrastructure/aws/variables.tf` file to only allow access from your network.
-  * Modify the `nginx.ingress.kubernetes.io/whitelist-source-range` variable
-  in the `helm/values.yaml` file to only allow access from your network.
-> **_NOTE:_** : After updating the configs you would have to run both
-`terraform apply` and `helm upgrade graph-indexer . --namespace=graph-indexer`
-* The database credentials are currently stored in plain text.
-  * Remove the default values of `postgresql_admin_user` and
-  `postgresql_admin_password` from `infrastructure/aws/variables.tf`.
-  * Define the new values in a `.tfvars` file in the same directory like this:
-  ```
-  postgresql_admin_user = "<your-desired-username>"
-  postgresql_admin_password = "<your-desired-password>"
-  ```
-  > **_NOTE:_** : Do NOT commit `.tfvars` to source control.
-
-  > **_NOTE:_** : You would have to `terraform apply` the changes.
-  * Define a new 
-  [kubernetes secret terraform resource](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/secret)
-  which references the 2 variables and then update the helm charts to reference
-  the secret. 
-* Configure a DNS entry and set up certificates for the kubernetes 
-nginx-ingress
-* For monitoring:
-  * A prometheus node which scrapes metrics from indexer nodes is available
-  at `http://<EXTERNAL_IP>/prometheus/graph`. You could configure it as a 
-  data source in Grafana Cloud. Follow the instructions in 
-  [this guide](https://grafana.com/docs/grafana-cloud/kubernetes-monitoring/prometheus/prometheus_operator/#step-6--create-a-kubernetes-secret-to-store-grafana-cloud-credentials)
-  * An alertmanager node is available at `http://<EXTERNAL_IP>/alertmanager`. 
-  You could configure it to send Prometheus alerts to Pagerduty. Take a look at
-  the `alertmanager.yaml` file. For writing alerts, use the `prometheusRules/yaml`
-  file
-  > **_NOTE:_** : Consider storing the Pagerduty API key in a Kubernetes secret
-  managed by Terraform. 
-> **_NOTE:_** : You have to run `helm upgrade graph-indexer . --namespace=graph-indexer`
-to apply the changes. 
+After you have provisioned the infrastructure, return to this guide.
 
 ## Subgraphs
 
@@ -145,12 +32,9 @@ graph deploy example --ipfs http://<EXTERNAL_IP>/ipfs --node http://<EXTERNAL_IP
 https://github.com/graphprotocol/example-subgraph. Don't forget to change the
 network to `klaytn` in `subgraph.yaml`.
 
-* To check that indexing has started run the following command:
-```
-kubectl logs service/index-node-klaytn-service -n graph-indexer | tail -n 100
-```
 > **_NOTE:_** : You will have to wait for a few minutes for blocks to be 
-ingested before running queries.
+ingested before running queries. You could check the output of the indexer node
+to make sure it is working.
 
 ### Creating
 
