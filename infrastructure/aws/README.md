@@ -60,6 +60,9 @@ kubectl get pods --all-namespaces
 ```
 kubectl create -f https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/master/bundle.yaml
 helm install graph-indexer . --create-namespace --namespace=graph-indexer
+```
+* Confirm services were deployed: 
+```
 helm list --all-namespaces
 kubectl get pods --all-namespaces
 ```
@@ -72,15 +75,16 @@ confirm it is working correctly
 
 > **_NOTE:_** : To destroy everything, simply run `terraform destroy --auto-approve`
 
-* You can now return to the root documentation and continue the guide. 
+> **_NOTE:_** : You can now return to the root documentation and continue the guide. 
 
 ### (OPTIONAL) Making everything production-ready
 
 * Terraform uses a local statefile. To make it persistent, you would have to
 create an S3 Bucket and a DynamoDB table manually following the instructions on
 this page: https://www.terraform.io/language/settings/backends/s3
-> **_NOTE:_** : The additional configuration should go in `provier.tf`.  After 
-updating the terraform configs, you would have to run `terraform init` again.
+> **_NOTE:_** : The additional configuratios should go in `provider.tf`.  After 
+updating the terraform configs, you would have to run `terraform init` to start
+storing the state remotely.
 * Restrict network access
   * Modify the `eks_management_ips` variable in the
   `infrastructure/aws/variables.tf` file to only allow access from your network.
@@ -88,6 +92,7 @@ updating the terraform configs, you would have to run `terraform init` again.
   in the `helm/values.yaml` file to only allow access from your network.
 > **_NOTE:_** : After updating the configs you would have to run both
 `terraform apply` and `helm upgrade graph-indexer . --namespace=graph-indexer`
+to apply them.
 * The database credentials are currently stored in plain text.
   * Remove the default values of `postgresql_admin_user` and
   `postgresql_admin_password` from `infrastructure/aws/variables.tf`.
@@ -108,7 +113,7 @@ updating the terraform configs, you would have to run `terraform init` again.
   * Update the Helm charts to use the new secret:
     * Remove the `username` and `password` variables from `values.yaml`
     * Edit `deployment-index-node` and `deployment-query-node` and replace this
-    snippet:
+    part:
     ```
         - name: postgres_user
           value: {{ index  .Values.CustomValues "postgress" "indexer" "username" }}
@@ -133,6 +138,7 @@ updating the terraform configs, you would have to run `terraform init` again.
 https://aws.amazon.com/premiumsupport/knowledge-center/eks-set-up-externaldns/
 > **_NOTE:_** : We already have an nginx-ingress deployed, just configure
 `external-dns.alpha.kubernetes.io/hostname: DOMAIN_NAME` when you get to that step.
+
 > **_NOTE:_** : Consider creating Terraform resources for the new IAM resources
 and Helm configurations for the external-dns pod.
 * For monitoring:
@@ -144,8 +150,8 @@ and Helm configurations for the external-dns pod.
   You could configure it to send Prometheus alerts to Pagerduty. 
     * Create a Pagerduty API key and configure it the `alertmanager.yaml` file.
     More information at: https://www.pagerduty.com/docs/guides/prometheus-integration-guide/
-    * For creating alerts, use the `prometheusRules.yaml` file.
-  file
+    * For creating alerts, use the `prometheusRules.yaml` snippetfile.
   > **_NOTE:_** : Consider storing the Pagerduty API key in a Kubernetes secret. 
+  
 > **_NOTE:_** : You have to run `helm upgrade graph-indexer . --namespace=graph-indexer`
 to apply the changes. 
