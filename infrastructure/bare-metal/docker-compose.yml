@@ -1,0 +1,54 @@
+version: '1'
+services:
+  index-node:
+    image: graphprotocol/graph-node:v0.27.0
+    ports:
+      - '8020:8020'
+      - '8040:8040'
+    depends_on:
+      - ipfs
+      - postgres
+    # extra_hosts:
+    #   - host.docker.internal:172.17.0.1
+    environment:
+      GRAPH_ALLOW_NON_DETERMINISTIC_FULLTEXT_SEARCH: true
+      BLOCK_INGESTOR: index-node
+      GRAPH_KILL_IF_UNRESPONSIVE: true
+      GRAPH_LOG: info
+      ETHEREUM_POLLING_INTERVAL: 250
+      ETHEREUM_TRACE_STREAM_STEP_SIZE: 500
+      ETHEREUM_RPC_MAX_PARALLEL_REQUESTS: 64
+      ETHEREUM_BLOCK_BATCH_SIZE: 128
+      GRAPH_ETHEREUM_MAX_BLOCK_RANGE_SIZE: 5000
+      GRAPH_ETHEREUM_TARGET_TRIGGERS_PER_BLOCK_RANGE: 88
+      GRAPH_ETHEREUM_JSON_RPC_TIMEOUT: 60
+      postgres_host: postgres
+      postgres_user: graph-node
+      postgres_pass: let-me-in
+      postgres_db: graph-node
+      node_role: index-node
+      node_id: index-node
+      ipfs: ipfs:5001
+      ethereum: klaytn:<KLAYTN_API_URL>
+  ipfs:
+    image: ipfs/go-ipfs:v0.10.0
+    ports:
+      - '5001:5001'
+    volumes:
+      - ./data/ipfs:/data/ipfs
+  postgres:
+    image: postgres
+    ports:
+      - '5432:5432'
+    command:
+      [
+        "postgres",
+        "-cshared_preload_libraries=pg_stat_statements"
+      ]
+    environment:
+      POSTGRES_USER: graph-node
+      POSTGRES_PASSWORD: let-me-in
+      POSTGRES_DB: graph-node
+      PGDATA: "/data/postgres"
+    volumes:
+      - ./data/postgres:/var/lib/postgresql/data
