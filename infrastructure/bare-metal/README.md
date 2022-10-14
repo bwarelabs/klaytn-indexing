@@ -58,6 +58,8 @@ docker compose up -d
     ```
     You should see something like this:
     ```
+    Downloading latest blocks from Ethereum, this may take a few minutes..., provider: klaytn-rpc-0, component: BlockIngestor
+    ...
     Oct 12 14:52:17.601 INFO Syncing 84 blocks from Ethereum, code: BlockIngestionLagging, blocks_needed: 84, blocks_behind: 84, latest_block_head: 103684173, current_block_head: 103684089, provider: klaytn-rpc-0, component: BlockIngestor
     Oct 12 14:52:47.482 INFO Syncing 30 blocks from Ethereum, code: BlockIngestionLagging, blocks_needed: 30, blocks_behind: 30, latest_block_head: 103684203, current_block_head: 103684173, provider: klaytn-rpc-0, component: BlockIngestor
     Oct 12 14:52:58.759 INFO Syncing 11 blocks from Ethereum, code: BlockIngestionStatus, blocks_needed: 11, blocks_behind: 11, latest_block_head: 103684214, current_block_head: 103684203, provider: klaytn-rpc-0, component: BlockIngestor
