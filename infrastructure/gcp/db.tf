@@ -2,6 +2,7 @@
 resource "google_sql_database_instance" "graph-indexer" {
   database_version       = var.postgresql_version
   name                   = "graph-indexer"
+  deletion_protection    = false
 
   settings {
     activation_policy      = "ALWAYS"
