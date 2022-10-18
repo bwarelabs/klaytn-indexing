@@ -18,13 +18,15 @@ deploy a Graph Node (+ other helper services) on top of them.
 * Configure your GCloud CLI (and implicitly Terraform): 
 https://cloud.google.com/sdk/docs/initializing
   ```
-  $ gcloud auth login
+  $ gcloud auth application-default login
   $ gcloud config set project <PROJECT_ID>
   ```
 * Confirm gcloud is configured correctly:
   ```
   $ gcloud config list
   ```
+  Additionally, you should have credentials stored under 
+  `$HOME/.config/gcloud/application_default_credentials.json`
 * Create the resources in GCP using Terraform:
   ```
   $ terraform init
@@ -33,14 +35,16 @@ https://cloud.google.com/sdk/docs/initializing
 * Verify that the new resources have been created:
   * From CLI:
   ```
-  TODO
+  gcloud container clusters list
+  gcloud sql instances list
   ```
   * From UI: 
-    * GKE Cluster: #TODO
-    * CloudSQL Database: #TODO
+    * GKE Cluster: https://console.cloud.google.com/kubernetes/list/overview?referrer=search&project=<PROJECT_ID>
+    * CloudSQL Database: https://console.cloud.google.com/sql/instances?referrer=search&project=<PROJECT_ID>
 * Configure kubectl:
 ```
-TODO
+$ gcloud components install gke-gcloud-auth-plugin
+$ gcloud container clusters get-credentials graph-indexer --region us-central1 --project <PROJECT_ID>
 ```
 * Confirm kubectl is configured:
 ```
@@ -48,8 +52,8 @@ kubectl get pods --all-namespaces
 ```
 * Navigate to the `helm` directory and fill in the missing values in
 `helm/values.yaml` (search for `# UPDATE THE VALUE` comments)
-  * The database hostname was printed by the `terraform apply` command and by
-  the `#TODO` command
+  * The database host should be the **PRIVATE IP** printed by the `terraform apply`
+  command. Alternatively you can find it by running `gcloud sql instances describe graph-indexer`.
   * The Klaytn network API endpoint should be something you have.
 * Deploy the services to Kubernetes:
 ```
@@ -68,7 +72,7 @@ kubectl get all -n ingress-controller
 * Navigate to the `http://<EXTERNAL_IP>/subgraphs/graphql` url in a browser to
 confirm it is working correctly
 
-> **_NOTE:_** : To destroy everything, simply run `terraform destroy --auto-approve`
+> **_NOTE:_** : To destroy everything, simply run `terraform destroy --auto-approve -var="project=<YOUR_PROJECT_ID>"`
 
 > **_NOTE:_** : You can now return to the root documentation and continue the guide. 
 

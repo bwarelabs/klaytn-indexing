@@ -26,7 +26,7 @@ variable "nginx_ingress_helm_chart_name" {
 variable "nginx_ingress_helm_chart_version" {
   type        = string
   description = "Version of the Helm chart"
-  default     = "3.35.0"
+  default     = "4.2.0"
 }
 
 variable "nginx_ingress_helm_release_name" {
