@@ -32,4 +32,9 @@ resource "google_sql_database_instance" "graph-indexer" {
       }
     }
   }
+
+  depends_on = [ 
+    google_project_service.sql-service,
+    google_service_networking_connection.graph-indexer-cloudsql-private-vpc-connection
+  ]
 }

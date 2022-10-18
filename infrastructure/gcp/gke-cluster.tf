@@ -19,9 +19,12 @@ resource "google_container_cluster" "graph-indexer" {
   }
 
   private_cluster_config {
+    master_ipv4_cidr_block  = "172.0.0.0/28"
     enable_private_endpoint = false
     enable_private_nodes    = true
   }
+
+  ip_allocation_policy {}
 
   master_authorized_networks_config {
     cidr_blocks {
@@ -36,7 +39,9 @@ resource "google_container_cluster" "graph-indexer" {
   }
 
   depends_on = [ 
-    google_compute_network.vpc,
+    google_project_service.compute-service,
+    google_project_service.gke-service,
+    google_compute_network.graph-indexer,
     google_service_account.graph-indexer-gke
   ]
 }

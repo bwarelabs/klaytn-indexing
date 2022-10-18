@@ -1,4 +1,4 @@
-variable "project_id" {
+variable "project" {
   description = "Google Cloud Platform project ID"
 }
 
@@ -9,7 +9,7 @@ variable "region" {
 
 variable "gke_management_ips" {
   description = "Array of CIDR IP blocks that can access the GKE cluster"
-  default = ["0.0.0.0/0"]
+  default = "0.0.0.0/0"
 }
 
 variable "gke_node_locations" {

@@ -15,13 +15,16 @@ terraform {
 }
 
 provider "google" {
-  project = var.project_id
+  project = var.project
   region  = var.region
 }
+
+data "google_client_config" "gcloud" {}
 
 provider "helm" {
   kubernetes {
     host                   = google_container_cluster.graph-indexer.endpoint
+    token                  = data.google_client_config.gcloud.access_token
     cluster_ca_certificate = base64decode(google_container_cluster.graph-indexer.master_auth.0.cluster_ca_certificate)
   }
 }
