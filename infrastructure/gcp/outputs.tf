@@ -3,5 +3,5 @@ output "public_endpoint" {
 }
 
 output "db_address" {
-  value = google_sql_database_instance.graph-indexer.ip_address
+  value = google_sql_database_instance.graph-indexer-postgres.ip_address
 }

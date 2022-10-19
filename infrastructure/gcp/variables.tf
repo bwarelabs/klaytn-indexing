@@ -72,3 +72,8 @@ variable "postgresql_admin_password" {
   description = "Postgresql admin user password"
   default     = "postgres"
 }
+
+variable "postgresql_dbname_indexer" {
+  description = "Database name"
+  default = "graph"
+}

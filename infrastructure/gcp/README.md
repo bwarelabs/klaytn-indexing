@@ -72,13 +72,16 @@ kubectl get all -n ingress-controller
 * Navigate to the `http://<EXTERNAL_IP>/subgraphs/graphql` url in a browser to
 confirm it is working correctly
 
-> **_NOTE:_** : To destroy everything, simply run `terraform destroy --auto-approve -var="project=<YOUR_PROJECT_ID>"`
+> **_NOTE:_** : To destroy everything, simply run `terraform destroy --auto-approve -var="project=<YOUR_PROJECT_ID>"`.
+If you get an error, run the same command again.
 
 > **_NOTE:_** : You can now return to the root documentation and continue the guide. 
 
 ### (OPTIONAL) Making everything production-ready
 
-* Terraform uses a local statefile. #TODO
+* Terraform uses a local statefile. To make it persistent, you would have to
+create a GCS Bucket manually following the instructions on this page: 
+https://www.terraform.io/language/settings/backends/gcs
 > **_NOTE:_** : The additional configuratios should go in `provider.tf`.  After 
 updating the terraform configs, you would have to run `terraform init` to start
 storing the state remotely.
@@ -132,7 +135,9 @@ to apply them.
     ```
   * Apply the changes: `helm upgrade graph-indexer . --namespace=graph-indexer`
 * Configure a DNS entry and set up certificates for the kubernetes nginx-ingress:
-#TODO
+https://cert-manager.io/docs/tutorials/acme/nginx-ingress/
+> **_NOTE:_** : We already have many components set up, like a Kubernetes cluster,
+the nginx-ingress controller, services, etc. 
 * For monitoring:
   * A prometheus node which scrapes metrics from indexer nodes is available
   at `http://<EXTERNAL_IP>/prometheus/graph`. You could configure it as a 

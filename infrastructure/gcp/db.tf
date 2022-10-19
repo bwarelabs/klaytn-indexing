@@ -1,5 +1,5 @@
 # Create CloudSQL Postgres instance
-resource "google_sql_database_instance" "graph-indexer" {
+resource "google_sql_database_instance" "graph-indexer-postgres" {
   database_version       = var.postgresql_version
   name                   = "graph-indexer"
   deletion_protection    = false
@@ -38,4 +38,17 @@ resource "google_sql_database_instance" "graph-indexer" {
     google_project_service.sql-service,
     google_service_networking_connection.graph-indexer-cloudsql-private-vpc-connection
   ]
+}
+
+resource "google_sql_database" "graph-indexer-postgres-database" {
+  name     = var.postgresql_dbname_indexer
+  instance = google_sql_database_instance.graph-indexer-postgres.name
+  depends_on = [ google_sql_database_instance.graph-indexer-postgres ]
+}
+
+resource "google_sql_user" "graph-indexer-postgres-user" {
+  name     = var.postgresql_admin_user
+  password = var.postgresql_admin_password
+  instance = google_sql_database_instance.graph-indexer-postgres.name
+  depends_on = [ google_sql_database_instance.graph-indexer-postgres ]
 }

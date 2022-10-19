@@ -47,3 +47,16 @@ resource "google_compute_router_nat" "graph-indexer" {
     filter = "ERRORS_ONLY"
   }
 }
+
+resource "google_compute_firewall" "gke-internal" {
+  name    = "graph-indexer-internal-firewall"
+  network = google_compute_network.graph-indexer.name
+
+  allow {
+    protocol = "tcp"
+    ports    = ["8443"]
+  }
+
+  source_ranges = ["172.0.0.0/28"]
+  target_tags   = ["graph-indexer"]
+}
