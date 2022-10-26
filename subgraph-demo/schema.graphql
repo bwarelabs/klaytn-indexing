@@ -1,0 +1,22 @@
+type Balance @entity {
+  id: ID!
+  token: Bytes!
+  account: Account!
+  amount: BigInt!
+}
+
+type Transfer @entity {
+  id: ID!
+  token: Bytes!
+  from: Account!
+  to: Account!
+  value: BigInt!
+  transaction: Bytes!
+  block: BigInt!
+}
+
+type Account @entity {
+  id: ID!
+  balances: [Balance!]! @derivedFrom(field: "account")
+  transfersOut: [Transfer!]! @derivedFrom(field: "from")
+}

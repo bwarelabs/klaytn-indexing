@@ -1,0 +1,26 @@
+specVersion: 0.0.4
+schema:
+  file: ./schema.graphql
+dataSources:
+  - kind: ethereum
+    name: KlaySwapProtocol
+    network: klaytn
+    source:
+      address: "0xc6a2ad8cc6e4a7e08fc37cc5954be07d499e7654"
+      abi: IERC20
+      startBlock: 42654238
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.6
+      language: wasm/assemblyscript
+      entities:
+        - Account
+        - Balance
+        - Transfer
+      abis:
+        - name: IERC20
+          file: ./abis/IERC20.json
+      eventHandlers:
+        - event: Transfer(indexed address,indexed address,uint256)
+          handler: handleTransfer
+      file: ./src/mapping.ts
