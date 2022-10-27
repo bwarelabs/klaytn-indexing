@@ -1,7 +1,7 @@
 version: '1'
 services:
   query-node:
-    image: graphprotocol/graph-node:v0.27.0
+    image: bwrdevops/graph-node:v0.27.1
     container_name: query-node
     restart: always
     ports:
@@ -23,7 +23,7 @@ services:
       ipfs: ipfs:5001
       ethereum: klaytn:<KLAYTN_API_URL>
   index-node:
-    image: graphprotocol/graph-node:v0.27.0
+    image: bwrdevops/graph-node:v0.27.1
     container_name: index-node
     restart: always
     ports:

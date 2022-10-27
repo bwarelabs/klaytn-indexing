@@ -2,8 +2,8 @@ replicaCount: 1
 imagePullPolicy: Always
 
 image:
-    name: graphprotocol/graph-node
-    tag: v0.27.0
+    name: bwrdevops/graph-node
+    tag: v0.27.1
 
 labels:
   project: graph-indexer
