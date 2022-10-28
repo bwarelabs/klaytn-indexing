@@ -2,123 +2,114 @@
 
 ## What is The Graph?
 
-The Graph (Google Of Blockchains) is a protocol that gives  the ability to retrieve data from blockchains easily in a decentralized manner.
-Before The Graph, dApps had to build their own data solutions to go through every single event emitted by their contract(s) and save the data locally, then build a software to filter that data.
+The Graph is an indexing protocol empowering applications to retrieve, aggregate in a stateful manner, then query data from a blockchain through a customizable and abstracted approach.
+Before The Graph, dApps had to build their own data pipeline to fetch the history of targeted smart contracts, store the raw information and create specialized solutions to process it before serving their end users.
 
-## What is an Event?
-The EVM has a logging functionality used to “write” data to a structure outside smart contracts. One such important piece of data is Solidity events. Events allow us to “print” information on the blockchain in a way that is more searchable and gas efficient than just saving to public storage variables in our smart contracts. 
+## What is an event?
 
-These logs are associated with the address of the contract, are incorporated into the blockchain, and stay there as long as a block is accessible. The Log and its event data is not accessible from within contracts (not even from the contract that created them). It’s their inaccessibility to smart contracts that makes them cheaper to emit. 
+The EVM has a logging functionality used to “write” data outside smart contracts though emitting formatted logs called events. Events allow smart contracts to “print” information on the blockchain in a way that is more searchable and gas efficient than just saving it to their public storage.
 
-With Solidity events, you can:
+These logs are associated with the address of the emitting contract, immutable once persisted into the blockchain and accessible at any time. The event logs are not accessible from within contracts (not even from the contract that created them). It is their inaccessibility to smart contracts that makes them cheaper to emit.
 
-- Test your smart contracts for specific variables;
-- **Index variables to rebuild storage state;**
-- Listen for events to change a front end;
-- **Create subgraphs for reading data faster**
+Emitting events enables the possibility to:
 
-This is what defining an event looks like in Solidity:
-```sh
-event Transfer(address indexed from, address indexed to, uint tokens);
+- Test smart contracts for conditions and invariants
+- Reconstruct a contract`s state by indexing and aggregating past logs
+- Listen for specific events to trigger an offchain operation
+- Access large blockchain data faster and more structured than reading it directly from smart contracts
+
+The definition of an event in the Solidity language looks like:
+
+```solidity
+event Transfer(address indexed from, address indexed to, uint256 value);
 ```
-You can think of this as a new special type. We have created a “type” of event called `Transfer`. The event name is called and can hold a number of variables. There are two kinds of parameters in this one event: indexed and non-indexed parameters. You can add the attribute indexed to up to three parameters which adds them to a special data structure known as “topics” instead of the data part of the log. A topic can only hold a single word (32 bytes) so if you use a reference type for an indexed argument, the Keccak-256 hash of the value is stored as a topic instead.
+
+You can think of this as a new special type. We have created a “type” of event called `Transfer`. The event name is called and can hold a number of variables. There are two kinds of enclosed parameters: indexed and non-indexed. You can assign the attribute `indexed` to up to three parameters which adds them to a special data structure known as `topics` instead of the data part of the log. A topic can only hold a single word (32 bytes) so if you use a reference type for an indexed argument, the keccak256 hash of the value is stored as a topic instead.
 All parameters without the indexed attribute are ABI-encoded into the data part of the log.
 
-Topics allow you to search for events, for example when filtering a sequence of blocks for certain events. You can also filter events by the address of the contract that emitted the event.
+Topics enable filtered search of events at the granularity of indexed parameters. For example, can fetch only `Transfer` events in a blocks range between two specific wallets, `from` and `to`.
 
-We can then emit an event like so:
-```sh
-    function transfer(address to, uint256 amount) public returns (bool) {
-        address owner = _msgSender();
-        _transfer(owner, to, amount);
-        emit Transfer(owner,to,amount)
-        return true;
-    }
+Can emit an event within the defining contract as:
+
+```solidity
+function _transfer(address sender, address recipient, uint256 amount) internal virtual {
+  _balances[sender] -= amount;
+  _balances[recipient] += amount;
+
+  emit Transfer(sender, recipient, amount);
+}
 ```
-Now, anytime we call the `transfer` function in this example, it will emit an event of type `Transfer`.
 
-Example of a sample transaction that call the `transfer` function:
+Now, anytime we call the `_transfer` function in this example, it will emit an event of type `Transfer`.
 
-![transctionETHS.png](https://www.dropbox.com/s/r5y4k7f1efut1u5/transctionETHS.png?dl=0&raw=1)
-#### An event is broken down like so:
-- Address: The address of the contract or account the event is emitted from.
-- Topics: The indexed parameters of the event.
-- Data: The ABI-Encoded or “hashed” non-indexed parameters of the event.
+Example of a `Transfer` log instance within a random transaction as displayed on the klaytn explorer:
 
+<img src="./assets/klaytn-explorer-transfer-log.png" width=50% height=50%>
 
-The Graph allows you to build custom open APIs called “Subgraphs”. Subgraphs are used to tell indexers (server operators) which data to index on a blockchain and save on their servers in order for you to be able to query it at any time using GraphQL.
+### Emitted logs are stored on the blockchain as:
 
+- Address: the address of the contract or account that emitted the event.
+- Topics: the values (or hashes) of the indexed parameters of the event, the first topic representing the hash of the signature of the event definition.
+- Data: the ABI-encoded non-indexed parameters logged by this event instance.
 
-## Software requirements
-You need to have the following installed on your computer:
-- Node.js
-- Any IDE. Like VS code
-- The Graph CLI
+## What is a subgraph?
 
-The Graph CLI is written in JavaScript, and you will need to install either yarn or npm to use it.
+The Graph facilitates the building of custom open APIs through “subgraphs”. A subgraph represents a packed configuration that instructs an indexer node (server) which data to index from a blockchain and how to aggregate it before storing the results structurally into a Postgres database. The indexer exposes each hosted subgraph through a GraphQL endpoint, allowing users to query the data it managed to process so far.
 
-Once you have npm, install the Graph CLI by running:
+## Subgraph development dependencies
+
+In order to install The Graph CLI, `npm` or `yarn` should be installed either on your machine or on a VSCode development container extending the `nodejs` docker image.
+
+Install with npm (possibly under `sudo` privileges):
+
 ```
-npm install  @graphprotocol/graph-cli
+npm install -g @graphprotocol/graph-cli
 ```
-The above command is for Windows users. If you are using a Mac/Linux, you have to use:
+
+Install with yarn (possibly under `sudo` privileges):
 
 ```
 yarn global add @graphprotocol/graph-cli
 ```
 
-On a MAC/Linux system if you want to use npm there is a few more steps that need to be done before using the npm command.
-First we need to change the path to be on a root level:
+Additionally, there is the Graph Typescript Library which contains utilities for interacting with the entities store and conveniences for handling smart contract data:
 
 ```
-cd /
-```
-After you are on a root level inside terminal paste down this command:
-
-```
-export HOME=/root
-```
-And now we can use npm to install graph-cli:
-
-```
-sudo npm install -g @graphprotocol/graph-cli
-```
-Afte the graph-cli is successfully installed to get back at initial setup, you have to run the following commands:
-
-```
-export HOME=/home/$USR
-cd ~
+npm install --dev @graphprotocol/graph-ts
 ```
 
-## Building A Subgraph
+or
+
+```
+yarn add --dev @graphprotocol/graph-ts
+```
+
 &nbsp;
 
-### Creating a Subgraph
-Once installed, the `graph init` command can be used to set up a new subgraph project, either from an existing contract on any of the public Ethereum networks or from an example subgraph. This command can be used to create a subgraph  by passing into VS code terminal `graph init`. If you already have a smart contract deployed to Ethereum mainnet or one of the testnets, bootstrapping a new subgraph from that contract can be a good way to get started.
+## Creating a subgraph
 
-From An Existing Contract
-
-The following command creates a subgraph that indexes all events of an existing contract. It attempts to fetch the contract ABI from Etherscan and falls back to requesting a local file path of the contract ABI. If any of the optional arguments are missing, it takes you through an interactive form.
+Once The Graph CLI has been installed, the `graph init` command can be used to set up a new subgraph project.
+For Klaytn (EVM-compatible chain) the protocol is `ethereum`, the subgraph project will be created locally using the `subgraph-studio` option, the published source code of the targeted contract is searched only on the Ethereum explorer, therefore the ABI of the contract should be manually supplied instead.
+The subgraph slug can be left blank as the subgraph is not meant to be run remotely on The Graph`s hosted service, not supporting Klaytn.
 
 ```sh
 graph init
-  ```
-The `<SUBGRAPH_SLUG>` is the ID of your subgraph in Subgraph Studio, it can be found on your subgraph details page - can be empty. Subgraph Studio will handle it.
+```
 
-If everything was done successfuly after `graph init` in your console you should have something like this: 
+On successfully running `graph init` the console should look similar to:
 
 ```
 graph init
 ✔ Protocol · ethereum
 ✔ Product for which to initialize · subgraph-studio
-✔ Subgraph slug · 
-✔ Directory to create the subgraph in · subgraph
-? Ethereum network … 
+✔ Subgraph slug ·
+✔ Directory to create the subgraph in · subgraph-demo
+? Ethereum network …
 ✔ Ethereum network · mainnet
-✔ Contract address · 0x1111111111111111111111111111111111111111
+✔ Contract address · 0xc6a2ad8cc6e4a7e08fc37cc5954be07d499e7654
 ✖ Failed to fetch ABI from Etherscan: ABI not found, try loading it from a local file
-✔ ABI file (path) · /Users/tutorial/tutorial/subgraphTutorial/contracts/abis/tokenContract.json
-✔ Contract Name · Contract
+✔ ABI file (path) · ./abis/IERC20.json
+✔ Contract Name · IERC20
 ———
   Generate subgraph
   Write subgraph to directory
@@ -129,361 +120,240 @@ graph init
 ✔ Generate ABI and schema types with yarn codegen
 ✔ Add another contract? (y/N) · false
 
-Subgraph  created in subgraph
+Subgraph  created in subgraph-demo
 ```
-Also you should notice that a `subgraph folder ` was generated where you can find the most important files for developing a subgraph:
 
-![](./assets/20221014121550.png)  
+while the contents of the `subgraph-demo` directory as:
+
+![](./assets/subgraph-dir-contents.png)
 
 &nbsp;
 
-From An Example Subgraph
+## Subgraph's components:
 
-The second mode graph init supports is creating a new project from an example subgraph. The following command does this:
-```
-graph init --studio <SUBGRAPH_SLUG>
-```
-### Subgraph's components:
-Every Subgraph has three important files:
-* Manifest – subgraph.yaml
+The subgraph project exposes the following configuration files:
 
-A manifest supplies information about data sources, templates, and some metadata for the subgraph (description, repository, etc.). The manifest defines the smart contracts indexed by a subgraph, the relevant events on the smart contracts, and how to map event data to entities that the Graph Node stores and allows to query.
+- Manifest – subgraph.yaml
 
-* Schema – schema.graphql
+A manifest supplies information about data sources, templates, and some metadata for the subgraph (description, repository, etc.). The manifest defines the smart contracts to be indexed by a subgraph, the relevant events on the smart contracts, and how to map event data to the entity types that the Graph Node will store in order to be accessed later.
 
-Here you define which data you want to be able to query after indexing your Subgraph using GraphQL. This is actually similar to a model for an API, where the model defines the structure of a request body.
+- Schema – schema.graphql
 
-* AssemblyScript Mappings – .ts file
+This file contains the subgraph's GraphQL schema which dictates how stored data is linked and structured to be suitable for the needs of the dApps querying it. The entities defined here are the object types where event data will be cumulatively aggregated, they define the structure of the Postgres tables to be created for the subgraph and the actual objects storing global data of the subgraph (each entity can be loaded during indexing, modified and stored back atomically within a mapping handler).
 
-This is the logic that determines how data should be retreived and stored when someone interacts with the contracts you listen to. The data gets translated and is stored based off the schema you have listed. The Graph CLI also generates AssemblyScript types using a combination of the subgraph’s schema along with a smart contract’s ABIs.
-AssemblyScript is a TypeScript-based programming language that is optimized for, and statically compiled to WebAssembly.
+- AssemblyScript Mappings – src/mapping.ts
+
+Contains the logic that transforms received event data into entity modifications to be applied on the store. For each event targeted in the manifest there is an associated handler receiving an instance log of that event as the sole argument. Within the handler, the subgraph developer can access existing objects of some entity type, modify or delete them or create new ones. The mapping handlers are written in AssemblyScript, a subset of TypeScript, which can be compiled to WASM (WebAssembly).
 
 &nbsp;
 
-### Explaining the Manifest:
+### Defining the manifest:
 
-
-The manifest is the main file of the subgraph (subgraph.yaml), and within it, you will define the files that you will use for the schema and all the mappings. By default, when using the Graph scaffolding command (init), the schema file will be set to schema.graphql, and the mappings will be placed in the mapping.ts file within the src folder. &nbsp;
+The manifest contains the location of the schema and mappings files along with the data sources producing the incoming event data. When using the Graph scaffolding command (graph init), the schema file is generated and named `schema.graphql` and unimplemented handlers placed in `mapping.ts` within the `src` directory. &nbsp;
 
 An example of subgraph.yaml would look like this:
 
-
-```
+```yaml
 specVersion: 0.0.4
 schema:
-  file: ./schema.graphql
+  file: "./schema.graphql"
 dataSources:
-  – kind: ethereum
-    name: Contract
-    network: mainnet
+  - kind: ethereum
+    name: KlaySwapProtocol
+    network: klaytn
     source:
-      address: “0xc944e90c64b2c07662a292be6244bdf05cda44a7”
-      abi: Contract
-      startBlock: 11446769
+      address: "0xc6a2ad8cc6e4a7e08fc37cc5954be07d499e7654"
+      abi: IERC20
+      startBlock: 42654238
     mapping:
       kind: ethereum/events
-      apiVersion: 0.0.5
+      apiVersion: 0.0.6
       language: wasm/assemblyscript
       entities:
-        – Transfer
+        - Account
+        - Balance
+        - Transfer
       abis:
-        – name: Contract
-          file: ./abis/Contract.json
+        - name: IERC20
+          file: ./abis/IERC20.json
       eventHandlers:
-        – event: Transfer(indexed address,indexed address,uint256)
+        - event: Transfer(indexed address,indexed address,uint256)
           handler: handleTransfer
-      callHandlers:
-        - function: transfer(address,uint256)
-          handler: handleTransfer
-      blockHandlers:
-        - handler: handleBlock
-        - handler: handleBlockWithCall
-          filter:
-            kind: call
- file: ./src/contract.ts
+      file: ./src/mapping.ts
+```
 
-```
-Line by line explanation:
-```
+```yaml
 schema:
 file: ./schema.graphql
 ```
-Here you are just defining the path of your GraphQL schema. It is automatically generated when you initialized your Subgraph.
 
-Under `dataSources` you define the sources of your data.
+Provide the path to your subgraph's GraphQL schema file.
 
-```
+```yaml
 dataSources:
   – kind: ethereum
-    name: Contract
-    network: mainnet
+    name: KlaySwapProtocol
+    network: klaytn
     source:
-      address: “0xc944e90c64b2c07662a292be6244bdf05cda44a7”
+      address: "0xc6a2ad8cc6e4a7e08fc37cc5954be07d499e7654"
+      abi: IERC20
+      startBlock: 42654238
 ```
 
-If your contract is on a different chain(not ETH mainet), then your network should refere to it. Also, make sure you fill in the address t of your deployed contract.
-```
-abi: Contract
-startBlock: 11446769
-```
+Describes the data source that is sourcing blockchain events to look after.
 
-Above, you are just defining the name of your ABI, this is like the table of contents for a smart contract . And the `startBlock` is telling the indexer from which block to start indexing data. It is recommended to fill in the startBlock with the block that the contract was created. Otherwise you will start syncing from the genesis block and end up waiting long periods of time before you encounter any relevant data.
+`kind`: the blockchain type which in this case is EVM-compatible - `ethereum`.
+`name`: the name given to this specific data source to differentiate it from others.
+`network`: identifier of network where the subgraph is supposed to operate, should match the network supplied for the provider URL on the indexer node configuration.
+`address`: specific contract whose events are being targeted, intentionally left blank when instructing the subgraph to consider all logs matching on the event signatures alone, regardless of the emitting contract.
+
+`abi` specifies the name of the contract within the ABI file.
+`startBlock` signals the indexer from which block to start searching for targeted events. It is recommended to use the creation block of the contract if supplied, otherwise the syncing process will take longer starting from the genesis block without finding any relevant events.
 
 ```
 dataSources.mapping.entities
 ```
- The entities that the data source writes to the store. The schema for each entity is defined in the schema.graphql file.
 
-```
+The subset of the entities defined in schema that will be written to the store by this data source.
+
+```yaml
 abis:
-    – name: Contract
-    file: ./abis/Contract.json
+  – name: IERC20
+    file: ./abis/IERC20.json
 ```
-One or more named ABI files for the source contract as well as any other smart contracts that you interact with from within the mappings.
 
-```
+One or more named ABI files for the source contract as well as any other smart contracts that the subgraph interacts with from within the mapping handlers.
+
+```yaml
 eventHandlers:
-- event: Transfer(indexed address,indexed address,uint256)
-handler: handleTransfer
-
-``` 
-
-Lists the smart contract events this subgraph reacts to and the handlers in the mapping—./src/mapping.ts in the example—that transform these events into entities in the store.
-
-&nbsp;
+  - event: Transfer(indexed address,indexed address,uint256)
+    handler: handleTransfer
 ```
-dataSources.mapping.callHandlers
 
-```
-Lists the smart contract functions this subgraph reacts to and handlers in the mapping that transform the inputs and outputs to function calls into entities in the store.
+List of the smart contract events this data source fetches from the blockchain and the name of the associated handler for each one.
+The data source defined in this example manifest fetches only the instances of the `Transfer` event described in the previous section. The associated handler `handleTransfer` will be executed for each of these logs emitted on the blockchain in chronological order and sequentially.
 
 &nbsp;
 
-```
-dataSources.mapping.blockHandlers
-```
-Lists the blocks this subgraph reacts to and handlers in the mapping to run when a block is appended to the chain. Without a filter, the block handler will be run every block. An optional call-filter can be provided by adding a filter field with kind: call to the handler. This will only run the handler if the block contains at least one call to the data source contract.
-
+Additional information about specifying method call and block handles on https://thegraph.com/docs/en/developing/creating-a-subgraph/#the-subgraph-manifest.
 
 &nbsp;
 
-In our Subgraph we are only going to index the `transfer event`.
+### Defining the GQL schema
 
-The event we are currently setting up our Subgraph to be listening to is:
-```
-event Transfer(address indexed from, address indexed to, uint256 value); 
-```
-As you can see we now have access to the parameters of what address the transfer is sent from, who it’s sent to, and how much is sent.
-```
-handler: handleTransfer
-```
-Here we are just telling our Subgraph that whenever the transfer event is emitted, run our handler handleTransfer.
+Let's consider the case where a dApp (a chain explorer) has to access the balance of a wallet over all owned ERC20 tokens at the moment as well as the history of all outgoing transfers made by the wallet.
 
+In this section we are going to explore how to structure and link data to meet this specification. As discussed before, every single GQL query will be made against the entities defined at this stage which makes the data model of upmost importance in meeting these requirements.
 
-&nbsp;
+Defining entity types happens at the level of `schema.graphql` and the available options for querying the subgraph come down to either single instance or collections of an entity type.
 
-### Defining the Schema:
-In this section we are going to take a look how you can structure and link data. This is a prerequisite before actually defining entities. This is so important because every single query will be made against the entities indexed by subgraph and the data model we are going to define in the subgraph schema. Make sure to define the subgraph schema to match  your needs. Think of entities not as events or functions but as objects containing data.
+A suitable definition of the schema would be:
 
-Defining entity types with The Graph is straightforward with `schema.graphql`. The Graph Node was due to rest by generating top-level fields for querying single instances and collections of that entity type. Just make sure to annotate each type that should be an entity with an `@entity` directive.
-
-Since our Subgraph is only indexing the transfer event, our schema will be simple and have only 1 entity.
-Example of `Transfer` entity:
-```
-type Transfer @entity {
-  
+```graphql
+type Balance @entity {
   id: ID!
+  token: Bytes!
+  account: Account!
+  amount: BigInt!
+}
 
-  # Quantity of tokens transferred
-  amount: BigDecimal!
-
-  # Transaction sender address
-  sender: Bytes!
-  
-  # Address of destination account
-  destination: Bytes!
-
-  #Block number
-  block: BigInt!
-
-  #Event timestamp
-  timestamp: BigInt!
-
-  #Transaction hash
+type Transfer @entity {
+  id: ID!
+  token: Bytes!
+  from: Account!
+  to: Account!
+  value: BigInt!
   transaction: Bytes!
+  block: BigInt!
+}
+
+type Account @entity {
+  id: ID!
+  balances: [Balance!]! @derivedFrom(field: "account")
+  transfersOut: [Transfer!]! @derivedFrom(field: "from")
 }
 ```
 
-We have seven fields:
+The semantics of the defined entities are the following:
 
-* id – It has the type ID. This must be unique. Sometimes, it is easier to set it to the address of the sender. But in our case, an address can send multiple times, so we have to come up with a way to set a unique id across all the transfer events we are going to store.
+`Balance`:
+Entity incorporating the `amount` of ERC20 of address `token` the wallet of address `account` owns.<br />
+In order to ensure uniqueness, the entity objects have to be indexed by a composite `id` of `account` + `token` which is constructed within `handlerTransfer` handler.<br />
+The `token` and `account` fields are redundant but easier to access than deconstructing `id`, the latter acting as a reverse-lookup for the owning wallet - `Account` as discussed later.
 
-* amount – It has the type BigDecimal, high precision decimals represented as a significand and an exponent with a range of [−6143,+6144]. Rounded to 34 significant digits. This is going to be the amount of tokens sent when the `transfer` event is emitted.
+`Transfer`:
+Entity incorporating an individual ERC20 transfer of `value` of ERC20 of address `token` from source `from` to destination `to`, emitted within the transaction of hash `transaction` mined on block number `block`.<br />
+Compared to the `Balance` entity, a wallet could have done multiple transfers using the same token which does not guarantee uniqueness among the objects of this entity. Instead `id` can be constructed from the block number + log index of the emitted event also accessible inside the handler.
 
-* sender – It has the type Bytes. It is recommended to use Bytes with addresses and hashes. It is represented as a hexadecimal string.
-
-* destination – The address of the receiver.
-
-* block – The block number in which the transaction was placed.
-
-* timestamp – It identifies when the transfer event occurred.
-
-* transaction – The hash of the transaction.
-
-The `"!"` sign means that field can’t be null.
+`Account`:
+Entity incorporating the list of `Balance` objects and the list of `Transfer` objects referencing the wallet's address used as `id` within instances of this entity type.
 
 &nbsp;
 
-## Entity Relationships
+#### Entity relationships
 
-An entity may have a relationship to one or more other entities in your schema(it's not our case here, because we have only one entity). These relationships are available only at query time. Relationships in The Graph are unidirectional. It is possible to simulate bidirectional relationships by defining a unidirectional relationship on either "end" of the relationship.
+An entity may have a relationship to one or more other entities in the schema. These relationships are available only at query time. Relationships in The Graph are unidirectional. It is possible to simulate bidirectional relationships by defining a unidirectional one on either "end" of the relationship.
 
 Relationships are defined on entities just like any other field except that the type specified is that of another entity.
 
-* One-To-One Relationships
+- One-To-One
 
-Define a `Transaction` entity type with an optional one-to-one relationship with a `TransactionReceip`t entity type:
-```
-type Transaction @entity {
-  id: Bytes!
-  transactionReceipt: TransactionReceipt
-}
+The `Balance` entity defines an one-to-one relationship to the `Account` entity at field `account`. Consequently, inside a query for single or collection `Balance` entities, `account` can be unfold using a nested inner query to access its containing fields.
 
-type TransactionReceipt @entity {
-  id: Bytes!
-  transaction: Transaction
-}
-```
-* One-To-Many Relationships
+- One-To-Many
 
-Define a TokenBalance entity type with a required one-to-many relationship with a Token entity type:
-```
-type Token @entity(immutable: true) {
-  id: Bytes!
-}
+The `Account` entity defines two one-to-many relationships to the `Balance` and `Transfer` entities via the `@derivedFrom` directive. However, the list of `Balance` or `Transfer` objects belonging to a specific `Account` is constructed and accessible only at query time, outside subgraph's handlers.<br />
+Emulating one-to-many relationships in this manner increases the performance for both indexing and querying the subgraph, compared to storing an array of entities on the 'many' side and explicitly updating it.
 
-type TokenBalance @entity {
-  id: Bytes!
-  amount: Int!
-  token: Token!
-}
-```
+- Many-To-Many
 
-* Reverse Lookups
+Regarding a many-to-many relationship, such as a wallet owning any number of distinct ERC20 tokens and the latter having multiple holders at once, the straightforward, but not scalable approach would be to model the relationship as derived on one side entity and explicitly stored on the other one.
 
-Reverse lookups can be defined on an entity through the `@derivedFrom` field. This creates a virtual field on the entity that may be queried but cannot be set manually through the mappings API. Rather, it is derived from the relationship defined on the other entity. 
+For example, the above schema should be extended by defining a `Token` entity having a list of `Account` holders that should be directly maintained in handlers, while `Account` entity will have its list of owned tokens resolved at query time by finding all `Token` objects including the wallet within their `holders`.
 
-For one-to-many relationships, the relationship should always be stored on the 'one' side, and the 'many' side should always be derived. Storing the relationship this way, rather than storing an array of entities on the 'many' side, will result in dramatically better performance for both indexing and querying the subgraph
-
-### Example
-```
+```graphql
 type Token @entity {
-  id: Bytes!
-  tokenBalances: [TokenBalance!]! @derivedFrom(field: "token")
+  id: ID!
+  holders: [Account!]!
 }
 
-type TokenBalance @entity {
-  id: Bytes!
-  amount: Int!
-  token: Token!
-}
-```
-
-* Many-To-Many Relationships
-
-For many-to-many relationships, such as users that each may belong to any number of organizations, the most straightforward, but generally not the most performant, way to model the relationship is as an array in each of the two entities involved. If the relationship is symmetric, only one side of the relationship needs to be stored and the other side can be derived.
-
-Example
-
-Define a reverse lookup from a User entity type to an Organization entity type. In the example below, this is achieved by looking up the members attribute from within the Organization entity. In queries, the organizations field on User will be resolved by finding all Organization entities that include the user's ID.
-```
-type Organization @entity {
-  id: Bytes!
-  name: String!
-  members: [User!]!
-}
-
-type User @entity {
-  id: Bytes!
-  name: String!
-  organizations: [Organization!]! @derivedFrom(field: "members")
+type Account @entity {
+  ...
+  tokens: [Token!]! @derivedFrom(field: "holders")
 }
 ```
 
-### Writing Mappings
+More information about the supported field-types, entity immutability and relationships on https://thegraph.com/docs/en/developing/creating-a-subgraph/#the-graph-ql-schema.
 
-Mappings are used to transform the sourced blockchain data into entities defined in your schema. This is done so that the sourced data can be stored in The Graph Node. You can write mappings by using a subset of TypeScript , which is called AssemblyScript. The assembyl script can be compiled to WASM (WebAssembly).
+### Code generation
 
-When writing mappings, make sure to create an exported function of the same name for each event handler that is defined in `subgraph.yaml` under `mapping.eventHandlers`. Each event handler has to accept a single parameter called `event`. The type of the event needs to correspond to the event name which is being handled.
+Instances of the entities defined in the subgraph's schema will end up being written to the Postgres store. In order to instruct the indexer node on how to process each trigger originating from the data source into entities, some form of "handlers" will have to be implemented.
+The `graph codegen` command generates type-safe classes in AssemblyScript for each entity and event in order to access their fields inside the handlers. In case of entities, generated classes also provide an interface to the underlying store for loading/storing the entity itself.
 
-To return to our example subgraph with the Token contract, the src/contract.ts includes handlers for the `Transfer` event of the smart contract:
+For each entity the class being generated provides:
 
-```
-import { Transfer } from "../generated/Contract/Contract"
-import { Transfer } from "../generated/schema"
-export function handleTransfer(event: Transfer): void {
-  let transferEvent = new Transfer(event.transaction.hash.toHex())
+- type-safe entity loading from the store though `load` method
 
-  let amount = (event.params.value.toBigDecimal())
-  transferEvent.amount = amount
+- getters and setters for the entity's fields
 
-  transferEvent.sender = event.params.from
-  transferEvent.destination = event.params.to
+- `save` and `remove`  methods to write a whole entity on the store
 
-  //Data regarding the block where in which the event is found
-  transferEvent.block = event.block.number
-  transferEvent.timestamp = event.block.timestamp
-  transferEvent.transaction = event.transaction.hash
+For each event there the class being generated provides getters for the event's attributes and the metadata of the block and transaction where it has been emitted.
 
-  transferEvent.save()
-}
-```
+Can import these classes within `mapping.ts` as follows:
 
-Now, let’s have a look what the mapping above does exactly.
-
-The  handler in the mapping takes the `Transfer` event and transforms the sourced data from the Ethereum blockchain. To do this, the mapping creates a new Transfer entity with `new Transfer(event.transaction.hash.toHex())`. The entity fields are populated through this using the corresponding event parameters. The variable `transferEvent` represents this entity instance and has a corresponding id value of `event.transaction.hash.toHex()`.
-
-
-### Code Generation
-
-Entities written to the store map one-to-one to the `@entity` types defined in the subgraph's GraphQL schema. To make working with these entities convenient, the `graph codegen` command provided by the `Graph CLI` generates entity classes, which are subclasses of the built-in Entity type, with property getters and setters for the fields in the schema as well as methods to load and save these entities.
-
-In our contract  example, the type is written to generated/Contract/Contract. This in turn allows the mappings to import these types with the following:
-
-```
-//The Contract class
-import { 
-    //The Contract class
-    Contract,
-
-    //The Event class
-   Transfer
-  } from "../generated/Contract/Contract"
+```typescript
+import { Transfer } from "../generated/KlaySwapProtocol/IERC20";
+import {
+  Account,
+  Balance,
+  Transfer as TransferEntity,
+} from "../generated/schema";
 ```
 
-For each entity type in the subgraph’s GraphQL schema, the above generates one class. These classes provide:
-
-* Type-safe entity loading
-
-* Read and write access to entity fields
-
-* A save() method to write entities to store
-
-Mappings can import all entity classes with the following command:
-```
-import { Transfer } from "../generated/schema"
-```
-
-To run `graph codegen` command you have to run the following steps:
+Run `graph codegen` command from the same directory where `subgraph.yaml` is located:
 
 ```
-cd subgraph // subgraph is the folder created after running graph init
-graph codegen
-```
-And the result of this commands should be like this:
-
-```
-graph codegen
   Skip migration: Bump mapping apiVersion from 0.0.1 to 0.0.2
   Skip migration: Bump mapping apiVersion from 0.0.2 to 0.0.3
   Skip migration: Bump mapping apiVersion from 0.0.3 to 0.0.4
@@ -493,10 +363,10 @@ graph codegen
   Skip migration: Bump manifest specVersion from 0.0.2 to 0.0.4
 ✔ Apply migrations
 ✔ Load subgraph from subgraph.yaml
-  Load contract ABI from abis/Contract.json
+  Load contract ABI from abis/IERC20.json
 ✔ Load contract ABIs
-  Generate types for contract ABI: Contract (abis/Contract.json)
-  Write types to generated/Contract/Contract.ts
+  Generate types for contract ABI: IERC20 (abis/IERC20.json)
+  Write types to generated/KlaySwapProtocol/IERC20.ts
 ✔ Generate types for contract ABIs
 ✔ Generate types for data source templates
 ✔ Load data source template ABIs
@@ -508,64 +378,131 @@ graph codegen
 Types generated successfully
 ```
 
-> **_Important:_**  Before building or deploying your subgraph, you must perform the code generation at least once. After every change to the ABIs included in the manifest or the GraphQL schema, the code generation will have to be performed again.
+> **_Important:_** After each change to the ABIs imported in the manifest or the GraphQL schema, code generation must be performed again to capture the latest changes.
+
+More information about the code generation phase at https://thegraph.com/docs/en/developing/creating-a-subgraph/#code-generation.
+
+### Defining the mappings
+
+Mapping handlers describe how the sourced data should be transformed into modifications on the entities defined in the schema. The mappings have to be written in a subset of TypeScript called AssemblyScript which can be compiled directly to WASM (WebAssembly).
+
+For each event handler defined in `subgraph.yaml` under `eventHandlers` section there should be an `export`ed function of the same name implemented in `mapping.ts`. Each event handler has to accept a single parameter `event` of type equal to the class generated for this event from the ABI specification.
+
+On our example subgraph there is one handler capturing `Transfer` events from an ERC20 contract and is implemented as:
+
+```typescript
+import { BigInt } from "@graphprotocol/graph-ts";
+import { Transfer } from "../generated/KlaySwapProtocol/IERC20";
+import {
+  Account,
+  Balance,
+  Transfer as TransferEntity,
+} from "../generated/schema";
+
+function createAccount(address: string): void {
+  let account = Account.load(address);
+  if (!account) {
+    account = new Account(address);
+    account.save();
+  }
+}
+
+export function handleTransfer(event: Transfer): void {
+  createAccount(event.params.to.toHex());
+  let id = event.params.to.toHex().concat(event.address.toHex());
+  let balance = Balance.load(id);
+  if (!balance) {
+    balance = new Balance(id);
+    balance.token = event.address;
+    balance.account = event.params.to.toHex();
+    balance.amount = BigInt.zero();
+  }
+  balance.amount = balance.amount.plus(event.params.value);
+  balance.save();
+
+  createAccount(event.params.from.toHex());
+  id = event.params.from.toHex().concat(event.address.toHex());
+  balance = Balance.load(id);
+  if (!balance) {
+    balance = new Balance(id);
+    balance.token = event.address;
+    balance.account = event.params.from.toHex();
+    balance.amount = BigInt.zero();
+  }
+  balance.amount = balance.amount.minus(event.params.value);
+  balance.save();
+
+  // do not have to load `Transfer` entity as it is unique each time
+  id = event.block.number.toString().concat(event.logIndex.toString());
+  let transfer = new TransferEntity(id);
+  transfer.token = event.address;
+  transfer.from = event.params.from.toHex();
+  transfer.to = event.params.to.toHex();
+  transfer.value = event.params.value;
+  transfer.transaction = event.transaction.hash;
+  transfer.block = event.block.number;
+  transfer.save();
+}
+```
+
+There is a single handler `handleTransfer` which receives a `Transfer` event as the sole argument and has to update affected entities accordingly to the specification.<br />
+An ERC20 transfer is changing the balances of both the source and destination wallets given by `from` and `to` fields of the received event.<br />
+Even though `Account` has only "derived" fields, we still have to create both entities on the store to make instances of this entity available at query time.<br />
+The handler then proceeds to create/update the `Balance` entities associated to both accounts for the ERC20 emitting the log. The subgraph is more general and able to construct balances in all existing tokens on the blockchain, however in our case we filter only logs emitted by `source.address` (in the manifest).<br />
+
+Nonetheless, the subgraph should also store a new `Transfer` in order to record the unique transfer for later retrieval of a wallet's history by the dApp.
 
 &nbsp;
 
-The mapping code in your `src/contract.ts` is not checked by the code generation. Before deploying your subgraph to The Graph Explorer, you can check the mapping code. To do so, run `graph build`. Should the TypeScript compiler find any syntax errors, they will be highlighted so that you can fix these.
+#### Building the subgraph
+
+The handlers code in `src/mapping.ts` is neither checked nor compiled into WASM at the code generation phase. `graph build` command will handle the compilation and highlight any syntax and type errors encountered.
+Once all the compile errors have been fixed, the subgraph bytecode can be deployed to the indexer.
 
 &nbsp;
 
-### Querying A Subgraph
+#### Create and deploy the compiled subgraph
 
-After deploying the subgraph on node indexer, it will provide an URL where the subgraph can be queried.
-
-Example:
+The commands required to install the subgraph on the indexer are:
 
 ```
-localhost:8000/subgraphs/name/subgraph/graphql
+graph create --node http(s)://<indexer-node-hostname>:8020 <subgraph-name>
+graph deploy --node http(s)://<indexer-node-hostname>:8020 --ipfs http(s)://<ipfs-node-hostname>:5001 <subgraph-name>
 ```
 
-Query example:
+### Querying a subgraph
 
-```
-query {
-  transfers(first: 5) {
-    amount
-    sender
-    destination
-    block
-    timestamp
-    transaction
+After the subgraph has been deployed on the indexer node and the indexing starts, the subgraph becomes available in the local browser on the explorer page at port `8000` and path `/subgraphs/name/<subgraph-name>/graphql` or for directly querying at path `/subgraphs/name/<subgraph-name>`.
+
+```graphql
+{
+  account(id: "0x2968c66f14308673c12812febfa58cfe87c4e5a8") {
+    balances(first: 1000) {
+      token
+      amount
+    }
   }
 }
 ```
 
-This should return the first 5 transactions with their information. Copy one of the transaction hashes you see and inspect it on EtherScan to make sure that you received the correct info! Without the parameter `first:5` by default this query would have fetched first 100 results which were stored on the graph.
+This query returns all `Balance` objects associated to the provided address (or the first 1000 of them), sorted ascending by their ids along with the nested data of token address and balance value for each one. This query executes by default in the context of the latest indexed block.
 
-### Time-travel queries
+#### Time-travel queries
 
-You can query the state of your entities not just for the latest block, which is the by default, but also for an arbitrary block in the past. The block at which a query should happen can be specified either by its block number or its block hash by including a `block` argument in the toplevel fields of queries.
+You can query the state of an entity not just at the latest indexed block (default option) but also in the context of an arbitrary past block. This block can be specified either by its number or hash by including the `block` field into the toplevel arguments of the query.
 
-Example
-
-```
-query {
-  transfers(block: { number: 8000000 }) {
-    amount
-    sender
-    destination
-    block
-    timestamp
-    transaction
+```graphql
+{
+  account(
+    id: "0x2968c66f14308673c12812febfa58cfe87c4e5a8"
+    block: { number: 49548688 }
+  ) {
+    balances(first: 1000) {
+      token
+      amount
+    }
   }
 }
 ```
-This query will return Transfers entities, as they existed directly after processing block number 8,000,000.
 
-
-
-
-
-
-
+This query returns the list of balances of the provided address as they were at a particular block.
