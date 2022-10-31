@@ -51,7 +51,7 @@ aws eks update-kubeconfig --name graph-indexer --region=us-west-2
 ```
 kubectl get pods --all-namespaces
 ```
-* Navigate to the `helm` directory and fill in the missing values in
+* Navigate to the `helm` directory and fill in the following missing values in
 `helm/values.yaml` (search for `# UPDATE THE VALUE` comments)
   * The database hostname was printed by the `terraform apply` command and by
   the `aws rds describe-db-instances --region=us-west-2` command (the `Address` field)

@@ -44,7 +44,7 @@ Now, anytime we call the `_transfer` function in this example, it will emit an e
 
 Example of a `Transfer` log instance within a random transaction as displayed on the klaytn explorer:
 
-<img src="./assets/klaytn-explorer-transfer-log.png" width=50% height=50%>
+<img src="../assets/klaytn-explorer-transfer-log.png" width=50% height=50%>
 
 ### Emitted logs are stored on the blockchain as:
 
@@ -125,7 +125,7 @@ Subgraph  created in subgraph-demo
 
 while the contents of the `subgraph-demo` directory as:
 
-![](./assets/subgraph-dir-contents.png)
+![](../assets/subgraph-dir-contents.png)
 
 &nbsp;
 
